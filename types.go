@@ -254,7 +254,7 @@ type BlkioStats struct {
 
 type Stats struct {
 	Read         time.Time    `json:"read"`
-	NetworkStats NetworkStats `json:"network_stats,omitempty"`
+	NetworkStats NetworkStats `json:"network,omitempty"`
 	CpuStats     CpuStats     `json:"cpu_stats,omitempty"`
 	MemoryStats  MemoryStats  `json:"memory_stats,omitempty"`
 	BlkioStats   BlkioStats   `json:"blkio_stats,omitempty"`
