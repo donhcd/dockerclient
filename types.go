@@ -174,18 +174,33 @@ type Image struct {
 }
 
 type Info struct {
-	ID              string
-	Containers      int64
-	Driver          string
-	DriverStatus    [][]string
-	ExecutionDriver string
-	Images          int64
-	KernelVersion   string
-	OperatingSystem string
-	NCPU            int64
-	MemTotal        int64
-	Name            string
-	Labels          []string
+	ID                 string
+	Containers         int64
+	Driver             string
+	DriverStatus       [][]string
+	ExecutionDriver    string
+	Images             int64
+	KernelVersion      string
+	OperatingSystem    string
+	NCPU               int64
+	MemTotal           int64
+	Name               string
+	Labels             []string
+	Debug              interface{} // should be a bool but is sometimes an int
+	NFd                int64
+	NGoroutines        int64
+	SystemTime         time.Time
+	NEventsListener    int64
+	InitPath           string
+	InitSha1           string
+	IndexServerAddress string
+	MemoryLimit        interface{} // should be a bool but is sometimes an int
+	SwapLimit          interface{} // should be a bool but is sometimes an int
+	IPv4Forwarding     interface{} // should be a bool but is sometimes an int
+	DockerRootDir      string
+	HttpProxy          string
+	HttpsProxy         string
+	NoProxy            string
 }
 
 type ImageDelete struct {
