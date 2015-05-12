@@ -106,6 +106,11 @@ func (client *MockClient) PullImage(name string, auth *dockerclient.AuthConfig) 
 	return args.Error(0)
 }
 
+func (client *MockClient) LoadImage(reader io.Reader) error {
+	args := client.Mock.Called(reader)
+	return args.Error(0)
+}
+
 func (client *MockClient) RemoveContainer(id string, force, volumes bool) error {
 	args := client.Mock.Called(id, force, volumes)
 	return args.Error(0)
@@ -134,4 +139,14 @@ func (client *MockClient) UnpauseContainer(name string) error {
 func (client *MockClient) Exec(config *dockerclient.ExecConfig) (string, error) {
 	args := client.Mock.Called(config)
 	return args.String(0), args.Error(1)
+}
+
+func (client *MockClient) RenameContainer(oldName string, newName string) error {
+	args := client.Mock.Called(oldName, newName)
+	return args.Error(0)
+}
+
+func (client *MockClient) ImportImage(source string, repository string, tag string, tar io.Reader) (io.ReadCloser, error) {
+	args := client.Mock.Called(source, repository, tag, tar)
+	return args.Get(0).(io.ReadCloser), args.Error(1)
 }
