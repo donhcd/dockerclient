@@ -229,6 +229,10 @@ type Image struct {
 	VirtualSize int64
 }
 
+// Info is the struct returned by /info
+// The API is currently in flux, so Debug, MemoryLimit, SwapLimit, and
+// IPv4Forwarding are interfaces because in docker 1.6.1 they are 0 or 1 but in
+// master they are bools.
 type Info struct {
 	ID                 string
 	Containers         int64
@@ -242,7 +246,7 @@ type Info struct {
 	MemTotal           int64
 	Name               string
 	Labels             []string
-	Debug              interface{} // should be a bool but is sometimes an int
+	Debug              interface{}
 	NFd                int64
 	NGoroutines        int64
 	SystemTime         time.Time
@@ -250,9 +254,9 @@ type Info struct {
 	InitPath           string
 	InitSha1           string
 	IndexServerAddress string
-	MemoryLimit        interface{} // should be a bool but is sometimes an int
-	SwapLimit          interface{} // should be a bool but is sometimes an int
-	IPv4Forwarding     interface{} // should be a bool but is sometimes an int
+	MemoryLimit        interface{}
+	SwapLimit          interface{}
+	IPv4Forwarding     interface{}
 	DockerRootDir      string
 	HttpProxy          string
 	HttpsProxy         string
