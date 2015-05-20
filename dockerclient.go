@@ -231,12 +231,12 @@ func (client *DockerClient) ContainerChanges(id string) ([]*ContainerChanges, er
 	return changes, nil
 }
 
-func (client *DockerClient) ContainerStats(id string) (<-chan StatsOrError, chan<- struct{}, error) {
+func (client *DockerClient) ContainerStats(id string, stopChan <-chan struct{}) (<-chan StatsOrError, error) {
 	uri := fmt.Sprintf("/%s/containers/%s/stats", APIVersion, id)
 	req, err := http.NewRequest("GET", client.URL.String()+uri, nil)
 	resp, err := client.HTTPClient.Do(req)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	decode := func(decoder *json.Decoder) decodingResult {
@@ -247,7 +247,7 @@ func (client *DockerClient) ContainerStats(id string) (<-chan StatsOrError, chan
 			return decodingResult{result: containerStats}
 		}
 	}
-	decodingResultChan, closeChan := client.readJSONStream(resp.Body, decode)
+	decodingResultChan := client.readJSONStream(resp.Body, decode, stopChan)
 	statsOrErrorChan := make(chan StatsOrError)
 	go func() {
 		for decodingResult := range decodingResultChan {
@@ -259,51 +259,31 @@ func (client *DockerClient) ContainerStats(id string) (<-chan StatsOrError, chan
 		}
 		close(statsOrErrorChan)
 	}()
-	return statsOrErrorChan, closeChan, nil
+	return statsOrErrorChan, nil
 }
 
-func (client *DockerClient) readJSONStream(stream io.ReadCloser, decode func(*json.Decoder) decodingResult) (<-chan decodingResult, chan<- struct{}) {
+func (client *DockerClient) readJSONStream(stream io.ReadCloser, decode func(*json.Decoder) decodingResult, stopChan <-chan struct{}) <-chan decodingResult {
 	resultChan := make(chan decodingResult)
-	closeChan := make(chan struct{})
+
 	go func() {
+		decoder := json.NewDecoder(stream)
+		defer stream.Close()
 		defer close(resultChan)
-
-		internalResultsChan := make(chan decodingResult)
-		defer close(internalResultsChan)
-
-		stillListening := make(chan struct{})
-		defer close(stillListening)
-
-		go func() {
-			decoder := json.NewDecoder(stream)
-			defer stream.Close()
-			for {
-				decodeResult := decode(decoder)
-				if _, ok := <-stillListening; !ok {
-					return
-				}
-				internalResultsChan <- decodeResult
+		for {
+			decodeResult := decode(decoder)
+			select {
+			case <-stopChan:
+				return
+			default:
+				resultChan <- decodeResult
 				if decodeResult.err != nil {
 					return
 				}
 			}
-		}()
-
-		for {
-			stillListening <- struct{}{}
-			select {
-			case result := <-internalResultsChan:
-				resultChan <- result
-				if result.err != nil {
-					<-closeChan
-					return
-				}
-			case <-closeChan:
-				return
-			}
 		}
 	}()
-	return resultChan, closeChan
+
+	return resultChan
 }
 
 func (client *DockerClient) StartContainer(id string, config *HostConfig) error {
@@ -346,7 +326,7 @@ func (client *DockerClient) KillContainer(id, signal string) error {
 	return nil
 }
 
-func (client *DockerClient) MonitorEvents(options *MonitorEventsOptions) (<-chan EventOrError, chan<- struct{}, error) {
+func (client *DockerClient) MonitorEvents(options *MonitorEventsOptions, stopChan <-chan struct{}) (<-chan EventOrError, error) {
 	v := url.Values{}
 	if options != nil {
 		if options.Since != 0 {
@@ -369,7 +349,7 @@ func (client *DockerClient) MonitorEvents(options *MonitorEventsOptions) (<-chan
 			if len(filterMap) > 0 {
 				filterJSONBytes, err := json.Marshal(filterMap)
 				if err != nil {
-					return nil, nil, err
+					return nil, err
 				}
 				v.Add("filters", string(filterJSONBytes))
 			}
@@ -378,7 +358,7 @@ func (client *DockerClient) MonitorEvents(options *MonitorEventsOptions) (<-chan
 	uri := fmt.Sprintf("%s/%s/events?%s", client.URL.String(), APIVersion, v.Encode())
 	resp, err := client.HTTPClient.Get(uri)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	decode := func(decoder *json.Decoder) decodingResult {
@@ -389,7 +369,7 @@ func (client *DockerClient) MonitorEvents(options *MonitorEventsOptions) (<-chan
 			return decodingResult{result: event}
 		}
 	}
-	decodingResultChan, closeChan := client.readJSONStream(resp.Body, decode)
+	decodingResultChan := client.readJSONStream(resp.Body, decode, stopChan)
 	eventOrErrorChan := make(chan EventOrError)
 	go func() {
 		for decodingResult := range decodingResultChan {
@@ -401,7 +381,7 @@ func (client *DockerClient) MonitorEvents(options *MonitorEventsOptions) (<-chan
 		}
 		close(eventOrErrorChan)
 	}()
-	return eventOrErrorChan, closeChan, nil
+	return eventOrErrorChan, nil
 }
 
 func (client *DockerClient) StartMonitorEvents(cb Callback, ec chan error, args ...interface{}) {
