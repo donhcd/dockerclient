@@ -15,9 +15,6 @@ type ContainerConfig struct {
 	MemorySwap      int64
 	CpuShares       int64
 	Cpuset          string
-	AttachStdin     bool
-	AttachStdout    bool
-	AttachStderr    bool
 	PortSpecs       []string
 	ExposedPorts    map[string]struct{}
 	MacAddress      string
@@ -72,6 +69,14 @@ type LogOptions struct {
 	Stderr     bool
 	Timestamps bool
 	Tail       int64
+}
+
+type AttachOptions struct {
+	Logs   bool
+	Stream bool
+	Stdin  bool
+	Stdout bool
+	Stderr bool
 }
 
 type MonitorEventsFilters struct {

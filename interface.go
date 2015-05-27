@@ -18,6 +18,7 @@ type Client interface {
 	ContainerChanges(id string) ([]*ContainerChanges, error)
 	Exec(config *ExecConfig) (string, error)
 	StartContainer(id string, config *HostConfig) error
+	AttachContainer(id string, options *AttachOptions) (io.ReadCloser, error)
 	StopContainer(id string, timeout int) error
 	RestartContainer(id string, timeout int) error
 	KillContainer(id, signal string) error
