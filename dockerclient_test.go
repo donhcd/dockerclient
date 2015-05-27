@@ -31,7 +31,7 @@ func testDockerClient(t *testing.T) *DockerClient {
 	return client
 }
 
-func ExampleAttachContainer() {
+func ExampleDockerClient_AttachContainer() {
 	docker, err := NewDockerClient("unix:///var/run/docker.sock", nil)
 	if err != nil {
 		panic(err)
