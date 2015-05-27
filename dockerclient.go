@@ -205,16 +205,7 @@ func (client *DockerClient) ContainerLogs(id string, options *LogOptions) (io.Re
 	}
 
 	uri := fmt.Sprintf("/%s/containers/%s/logs?%s", APIVersion, id, v.Encode())
-	req, err := http.NewRequest("GET", client.URL.String()+uri, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	return resp.Body, nil
+	return client.doStreamRequest("GET", uri, nil, nil)
 }
 
 func (client *DockerClient) ContainerChanges(id string) ([]*ContainerChanges, error) {
@@ -286,6 +277,29 @@ func (client *DockerClient) readJSONStream(stream io.ReadCloser, decode func(*js
 	return resultChan
 }
 
+func (client *DockerClient) AttachContainer(id string, options *AttachOptions) (io.ReadCloser, error) {
+	v := url.Values{}
+	if options != nil {
+		if options.Logs {
+			v.Set("logs", "1")
+		}
+		if options.Stream {
+			v.Set("stream", "1")
+		}
+		if options.Stdin {
+			v.Set("stdin", "1")
+		}
+		if options.Stdout {
+			v.Set("stdout", "1")
+		}
+		if options.Stderr {
+			v.Set("stderr", "1")
+		}
+	}
+	uri := fmt.Sprintf("/%s/containers/%s/attach?%s", APIVersion, id, v.Encode())
+	return client.doStreamRequest("POST", uri, nil, nil)
+}
+
 func (client *DockerClient) StartContainer(id string, config *HostConfig) error {
 	data, err := json.Marshal(config)
 	if err != nil {
@@ -293,10 +307,7 @@ func (client *DockerClient) StartContainer(id string, config *HostConfig) error 
 	}
 	uri := fmt.Sprintf("/%s/containers/%s/start", APIVersion, id)
 	_, err = client.doRequest("POST", uri, data, nil)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (client *DockerClient) StopContainer(id string, timeout int) error {
