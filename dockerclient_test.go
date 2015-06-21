@@ -65,6 +65,16 @@ func ExampleDockerClient_AttachContainer() {
 	<-done
 }
 
+func ExampleDockerClient_PullImage() {
+	docker, err := NewDockerClient("unix:///var/run/docker.sock", nil)
+	if err != nil {
+		panic(err)
+	}
+	if err := docker.PullImage("busybox", nil, os.Stdout); err != nil {
+		panic(err)
+	}
+}
+
 func TestInfo(t *testing.T) {
 	client := testDockerClient(t)
 	info, err := client.Info()
@@ -84,17 +94,17 @@ func TestKillContainer(t *testing.T) {
 
 func TestPullImage(t *testing.T) {
 	client := testDockerClient(t)
-	err := client.PullImage("busybox", nil)
+	err := client.PullImage("busybox", nil, nil)
 	if err != nil {
-		t.Fatal("unable to pull busybox")
+		t.Fatal("unable to pull busybox: %v", err)
 	}
 
-	err = client.PullImage("haproxy", nil)
+	err = client.PullImage("haproxy", nil, nil)
 	if err != nil {
-		t.Fatal("unable to pull haproxy")
+		t.Fatal("unable to pull haproxy: %v", err)
 	}
 
-	err = client.PullImage("wrongimg", nil)
+	err = client.PullImage("wrongimg", nil, nil)
 	if err == nil {
 		t.Fatal("should return error when it fails to pull wrongimg")
 	}
