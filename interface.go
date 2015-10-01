@@ -38,7 +38,7 @@ type Client interface {
 	StopAllMonitorStats()
 	TagImage(nameOrID string, repo string, tag string, force bool) error
 	Version() (*Version, error)
-	PullImage(name string, auth *AuthConfig, cliOut io.Writer) error
+	PullImage(name string, auth *AuthConfig) error
 	LoadImage(reader io.Reader) error
 	RemoveContainer(id string, force, volumes bool) error
 	ListImages() ([]*Image, error)

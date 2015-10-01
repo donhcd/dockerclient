@@ -14,9 +14,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-
-	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/docker/docker/pkg/term"
 )
 
 const (
@@ -486,49 +483,29 @@ func (client *DockerClient) Version() (*Version, error) {
 	return version, nil
 }
 
-func (client *DockerClient) PullImage(name string, auth *AuthConfig, cliOut io.Writer) (err error) {
+func (client *DockerClient) PullImage(name string, auth *AuthConfig) error {
 	v := url.Values{}
 	v.Set("fromImage", name)
 	uri := fmt.Sprintf("/%s/images/create?%s", APIVersion, v.Encode())
-	req, _ := http.NewRequest("POST", client.URL.String()+uri, nil)
+	req, err := http.NewRequest("POST", client.URL.String()+uri, nil)
 	if auth != nil {
 		req.Header.Add("X-Registry-Auth", auth.encode())
 	}
-	var resp *http.Response
-	resp, err = client.HTTPClient.Do(req)
+	resp, err := client.HTTPClient.Do(req)
 	if err != nil {
-		return
+		return err
 	}
 	defer resp.Body.Close()
-	errorReader := io.Reader(resp.Body)
-	if cliOut != nil {
-		pipeReader, pipeWriter := io.Pipe()
-		streamErrChan := make(chan error)
-		defer func() {
-			pipeWriter.Close()
-			if err == nil {
-				err = <-streamErrChan
-			}
-		}()
-		errorReader = io.TeeReader(resp.Body, pipeWriter)
-		go func() {
-			fd, isTerminalIn := term.GetFdInfo(cliOut)
-			streamErrChan <- jsonmessage.DisplayJSONMessagesStream(pipeReader, cliOut, fd, isTerminalIn)
-		}()
-	}
 	var finalObj map[string]interface{}
-	for decoder := json.NewDecoder(errorReader); err == nil; err = decoder.Decode(&finalObj) {
+	for decoder := json.NewDecoder(resp.Body); err == nil; err = decoder.Decode(&finalObj) {
 	}
 	if err != io.EOF {
-		return
-	} else {
-		err = nil
+		return err
 	}
-	if errObj, ok := finalObj["error"]; ok {
-		err = fmt.Errorf("%v", errObj)
-		return
+	if err, ok := finalObj["error"]; ok {
+		return fmt.Errorf("%v", err)
 	}
-	return
+	return nil
 }
 
 func (client *DockerClient) InspectImage(id string) (*ImageInfo, error) {

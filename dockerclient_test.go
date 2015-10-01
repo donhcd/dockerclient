@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -94,17 +93,17 @@ func TestKillContainer(t *testing.T) {
 
 func TestPullImage(t *testing.T) {
 	client := testDockerClient(t)
-	err := client.PullImage("busybox", nil, nil)
+	err := client.PullImage("busybox", nil)
 	if err != nil {
-		t.Fatal("unable to pull busybox: %v", err)
+		t.Fatal("unable to pull busybox")
 	}
 
-	err = client.PullImage("haproxy", nil, nil)
+	err = client.PullImage("haproxy", nil)
 	if err != nil {
-		t.Fatal("unable to pull haproxy: %v", err)
+		t.Fatal("unable to pull haproxy")
 	}
 
-	err = client.PullImage("wrongimg", nil, nil)
+	err = client.PullImage("wrongimg", nil)
 	if err == nil {
 		t.Fatal("should return error when it fails to pull wrongimg")
 	}
