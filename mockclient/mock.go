@@ -3,7 +3,7 @@ package mockclient
 import (
 	"io"
 
-	"github.com/samalba/dockerclient"
+	"github.com/donhcd/dockerclient"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -48,6 +48,16 @@ func (client *MockClient) ContainerLogs(id string, options *dockerclient.LogOpti
 func (client *MockClient) ContainerChanges(id string) ([]*dockerclient.ContainerChanges, error) {
 	args := client.Mock.Called(id)
 	return args.Get(0).([]*dockerclient.ContainerChanges), args.Error(1)
+}
+
+func (client *MockClient) ContainerStats(id string, stopChan <-chan struct{}) (<-chan dockerclient.StatsOrError, error) {
+	args := client.Mock.Called(id, stopChan)
+	return args.Get(0).(<-chan dockerclient.StatsOrError), args.Error(1)
+}
+
+func (client *MockClient) AttachContainer(id string, options *dockerclient.AttachOptions) (io.ReadCloser, error) {
+	args := client.Mock.Called(id, options)
+	return args.Get(0).(io.ReadCloser), args.Error(1)
 }
 
 func (client *MockClient) StartContainer(id string, config *dockerclient.HostConfig) error {

@@ -102,6 +102,14 @@ type LogOptions struct {
 	Tail       int64
 }
 
+type AttachOptions struct {
+	Logs   bool
+	Stream bool
+	Stdin  bool
+	Stdout bool
+	Stderr bool
+}
+
 type MonitorEventsFilters struct {
 	Event     string `json:",omitempty"`
 	Image     string `json:",omitempty"`
@@ -321,6 +329,11 @@ type ImageDelete struct {
 	Untagged string
 }
 
+type StatsOrError struct {
+	Stats
+	Error error
+}
+
 type EventOrError struct {
 	Event
 	Error error
@@ -346,6 +359,7 @@ type ThrottlingData struct {
 	ThrottledTime uint64 `json:"throttled_time"`
 }
 
+// All CPU stats are aggregated since container inception.
 type CpuUsage struct {
 	// Total CPU time consumed.
 	// Units: nanoseconds.
