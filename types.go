@@ -12,9 +12,6 @@ type ContainerConfig struct {
 	Hostname        string
 	Domainname      string
 	User            string
-	AttachStdin     bool
-	AttachStdout    bool
-	AttachStderr    bool
 	ExposedPorts    map[string]struct{}
 	Tty             bool
 	OpenStdin       bool
