@@ -1,6 +1,6 @@
 Docker client library in Go
 ===========================
-[![GoDoc](http://godoc.org/github.com/samalba/dockerclient?status.png)](http://godoc.org/github.com/samalba/dockerclient)
+[![GoDoc](http://godoc.org/github.com/donhcd/dockerclient?status.png)](http://godoc.org/github.com/samalba/dockerclient)
 
 Well maintained docker client library.
 
@@ -12,7 +12,7 @@ Here is an example showing how to use it:
 package main
 
 import (
-	"github.com/samalba/dockerclient"
+	"github.com/donhcd/dockerclient"
 	"log"
 	"time"
 	"os"
@@ -90,7 +90,7 @@ func main() {
 
 List of people you can ping for feedback on Pull Requests or any questions.
 
-- [Sam Alba](https://github.com/samalba)
+- [Sam Alba](https://github.com/donhcd)
 - [Michael Crosby](https://github.com/crosbymichael)
 - [Andrea Luzzardi](https://github.com/aluzzardi)
 - [Victor Vieux](https://github.com/vieux)
