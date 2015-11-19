@@ -214,6 +214,47 @@ func TestContainerLogs(t *testing.T) {
 	}
 }
 
+func TestContainerStats(t *testing.T) {
+	client := testDockerClient(t)
+	var expectedContainerStats Stats
+	if err := json.Unmarshal([]byte(statsResp), &expectedContainerStats); err != nil {
+		t.Fatalf("cannot parse expected resp: %s", err.Error())
+	}
+	containerIds := []string{"foobar", "foo"}
+	expectedResults := [][]StatsOrError{
+		{{Stats: expectedContainerStats}, {Error: fmt.Errorf("error")}},
+		{{Stats: expectedContainerStats}, {Stats: expectedContainerStats}},
+	}
+
+	for i := range containerIds {
+		t.Logf("on outer iter %d\n", i)
+		stopChan := make(chan struct{})
+		statsOrErrorChan, err := client.ContainerStats(containerIds[i], stopChan)
+		if err != nil {
+			t.Fatalf("cannot get stats from server: %s", err.Error())
+		}
+
+		for j, expectedResult := range expectedResults[i] {
+			t.Logf("on iter %d\n", j)
+			containerStatsOrError := <-statsOrErrorChan
+			if containerStatsOrError.Error != nil {
+				if expectedResult.Error == nil {
+					t.Fatalf("index %d, got unexpected error %v", j, containerStatsOrError.Error)
+				} else {
+					// don't require error equality
+					continue
+				}
+			}
+			if !reflect.DeepEqual(containerStatsOrError, expectedResult) {
+				t.Fatalf("index %d, got:\n%#v\nexpected:\n%#v", j, containerStatsOrError, expectedResult)
+			}
+			t.Logf("done with iter %d\n", j)
+		}
+		close(stopChan)
+		t.Logf("done with outer iter %d\n", i)
+	}
+}
+
 func TestMonitorEvents(t *testing.T) {
 	client := testDockerClient(t)
 	decoder := json.NewDecoder(bytes.NewBufferString(eventsResp))

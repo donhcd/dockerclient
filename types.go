@@ -339,6 +339,11 @@ type ImageDelete struct {
 	Untagged string
 }
 
+type StatsOrError struct {
+	Stats
+	Error error
+}
+
 type EventOrError struct {
 	Event
 	Error error
@@ -364,6 +369,7 @@ type ThrottlingData struct {
 	ThrottledTime uint64 `json:"throttled_time"`
 }
 
+// All CPU stats are aggregated since container inception.
 type CpuUsage struct {
 	// Total CPU time consumed.
 	// Units: nanoseconds.

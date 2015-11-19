@@ -244,6 +244,37 @@ func (client *DockerClient) ContainerChanges(id string) ([]*ContainerChanges, er
 	return changes, nil
 }
 
+func (client *DockerClient) ContainerStats(id string, stopChan <-chan struct{}) (<-chan StatsOrError, error) {
+	uri := fmt.Sprintf("/%s/containers/%s/stats", APIVersion, id)
+	req, err := http.NewRequest("GET", client.URL.String()+uri, nil)
+	resp, err := client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	decode := func(decoder *json.Decoder) decodingResult {
+		var containerStats Stats
+		if err := decoder.Decode(&containerStats); err != nil {
+			return decodingResult{err: err}
+		} else {
+			return decodingResult{result: containerStats}
+		}
+	}
+	decodingResultChan := client.readJSONStream(resp.Body, decode, stopChan)
+	statsOrErrorChan := make(chan StatsOrError)
+	go func() {
+		for decodingResult := range decodingResultChan {
+			stats, _ := decodingResult.result.(Stats)
+			statsOrErrorChan <- StatsOrError{
+				Stats: stats,
+				Error: decodingResult.err,
+			}
+		}
+		close(statsOrErrorChan)
+	}()
+	return statsOrErrorChan, nil
+}
+
 func (client *DockerClient) readJSONStream(stream io.ReadCloser, decode func(*json.Decoder) decodingResult, stopChan <-chan struct{}) <-chan decodingResult {
 	resultChan := make(chan decodingResult)
 
