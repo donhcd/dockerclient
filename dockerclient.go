@@ -218,16 +218,7 @@ func (client *DockerClient) ContainerLogs(id string, options *LogOptions) (io.Re
 	}
 
 	uri := fmt.Sprintf("/%s/containers/%s/logs?%s", APIVersion, id, v.Encode())
-	req, err := http.NewRequest("GET", client.URL.String()+uri, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	return resp.Body, nil
+	return client.doStreamRequest("GET", uri, nil, nil)
 }
 
 func (client *DockerClient) ContainerChanges(id string) ([]*ContainerChanges, error) {
@@ -396,10 +387,7 @@ func (client *DockerClient) StartContainer(id string, config *HostConfig) error 
 	}
 	uri := fmt.Sprintf("/%s/containers/%s/start", APIVersion, id)
 	_, err = client.doRequest("POST", uri, data, nil)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (client *DockerClient) StopContainer(id string, timeout int) error {

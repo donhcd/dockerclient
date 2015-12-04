@@ -66,6 +66,16 @@ func ExampleDockerClient_AttachContainer() {
 	<-done
 }
 
+func ExampleDockerClient_PullImage() {
+	docker, err := NewDockerClient("unix:///var/run/docker.sock", nil)
+	if err != nil {
+		panic(err)
+	}
+	if err := docker.PullImage("busybox", nil, os.Stdout); err != nil {
+		panic(err)
+	}
+}
+
 func TestInfo(t *testing.T) {
 	client := testDockerClient(t)
 	info, err := client.Info()
